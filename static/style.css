@@ -16,7 +16,12 @@ body {
 }
 .call-header {
   text-align: center;
-  padding: 4px 0 18px;
+  min-height: 82vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding: 20px 0 28px;
 }
 .call-top {
   height: 28px;
@@ -110,6 +115,7 @@ body {
   50% { box-shadow: 0 0 0 14px rgba(239,68,68,0), 0 10px 30px rgba(239,68,68,.25); }
 }
 .chat-box {
+  display:none;
   min-height: 92px;
   max-height: 150px;
   overflow-y: auto;
@@ -198,10 +204,12 @@ footer { display:flex; justify-content:center; gap:22px; padding:12px 0 4px; pos
 .more-btn:hover { background:#1e293b; }
 .details-panel { display:none; }
 .details-panel.open { display:block; }
+.details-panel.open ~ footer { position:static; }
+.more-btn { position:sticky; bottom:8px; z-index:20; box-shadow:0 8px 28px rgba(0,0,0,.35); }
 .details-panel > .panel, .details-panel > .activity-panel { margin-top:0; margin-bottom:12px; }
 .panel, .activity-panel { width: 100%; }
 @media (max-width: 650px) {
-  .call-header { min-height: 70vh; }
+  .call-header { min-height: 78vh; }
   .jannu-avatar { width:200px; height:200px; }
   .avatar-face { width:160px; height:160px; font-size:86px; }
   .ring-one { width:180px; height:180px; }
