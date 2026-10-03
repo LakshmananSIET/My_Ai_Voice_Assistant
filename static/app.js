@@ -88,9 +88,7 @@ function initSpeechRecognition() {
                 if (reminderData.ok) {
                     saveAndScheduleReminder(reminderData.title, reminderData.due_at);
                 }
-                await speakAndResume(reminderData.ok
-                    ? await makeSpeech(reminderData.message)
-                    : "");
+                await speakAndResume(reminderData.audio_b64 || "");
                 return;
             }
 
