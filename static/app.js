@@ -81,10 +81,12 @@ function initSpeechRecognition() {
 
         waitingForReply = true;
         statusText.innerText = "Jannu yosichitu irukken...";
-        appendMessage(transcript, "user");
-        addActivity(transcript, "user");
 
         try {
+            appendMessage(transcript, "user");
+            try { addActivity(transcript, "user"); } catch (activityError) {
+                console.warn("Activity UI error:", activityError);
+            }
             if (isTaskRequest(transcript)) {
                 const task = createTaskFromSpeech(transcript);
                 if (task) {
@@ -124,6 +126,7 @@ function initSpeechRecognition() {
 
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), 30000);
+            statusText.innerText = "Jannu yosichitu irukken...";
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -136,6 +139,7 @@ function initSpeechRecognition() {
             addActivity(data.response_text || "Jannu replied", "ai");
             await speakAndResume(data.audio_b64);
         } catch (error) {
+            console.error("Jannu reply error:", error);
             const msg = error.name === "AbortError"
                 ? "Response konjam late aagudhu sir. Again pesunga."
                 : "Network problem sir. Again try pannunga.";
@@ -252,7 +256,7 @@ function createTaskFromSpeech(text) {
         .trim();
     if (!title || title.length < 2) title = text.replace(/\b(task|please|add|create|set)\b/gi, "").trim();
     if (!title) return null;
-    const task = { id: crypto.randomUUID(), title, status: "pending", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    const task = { id: makeId(), title, status: "pending", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     savedTasks.unshift(task);
     localStorage.setItem("ai_tasks", JSON.stringify(savedTasks));
     renderDashboard();
@@ -272,9 +276,14 @@ function completeTaskFromSpeech(text) {
     return task;
 }
 
+function makeId() {
+    if (window.crypto && crypto.randomUUID) return makeId();
+    return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
 function addActivity(text, type = "message", status = "") {
     savedActivity.unshift({
-        id: crypto.randomUUID(),
+        id: makeId(),
         text: String(text),
         type,
         status,
@@ -305,7 +314,7 @@ async function makeSpeech(text) {
 
 function saveAndScheduleReminder(title, dueAt) {
     const reminder = {
-        id: crypto.randomUUID(),
+        id: makeId(),
         title,
         dueAt,
         createdAt: new Date().toISOString(),
