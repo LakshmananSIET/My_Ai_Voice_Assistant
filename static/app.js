@@ -122,19 +122,28 @@ function initSpeechRecognition() {
                 return;
             }
 
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 30000);
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: transcript })
+                body: JSON.stringify({ text: transcript }),
+                signal: controller.signal
             });
+            clearTimeout(timeout);
             const data = await response.json();
             appendMessage(data.response_text || "Sorry sir, answer kedaikala.", "ai");
             addActivity(data.response_text || "Jannu replied", "ai");
             await speakAndResume(data.audio_b64);
-        } catch (_) {
-            appendMessage("Network problem sir. Again try pannunga.", "ai");
+        } catch (error) {
+            const msg = error.name === "AbortError"
+                ? "Response konjam late aagudhu sir. Again pesunga."
+                : "Network problem sir. Again try pannunga.";
+            appendMessage(msg, "ai");
+            addActivity(msg, "ai");
             waitingForReply = false;
-            startListeningSoon();
+            statusText.innerText = "Listening...";
+            startListeningSoon(500);
         }
     };
 
