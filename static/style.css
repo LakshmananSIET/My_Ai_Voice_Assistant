@@ -42,19 +42,19 @@ body {
 }
 .jannu-avatar {
   position: relative;
-  width: 132px;
-  height: 132px;
+  width: 220px;
+  height: 220px;
   margin: 16px auto 12px;
   display: grid;
   place-items: center;
 }
 .avatar-face {
-  width: 104px;
-  height: 104px;
+  width: 178px;
+  height: 178px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 58px;
+  font-size: 96px;
   background: linear-gradient(145deg, #fbcfe8, #c4b5fd);
   border: 4px solid rgba(255,255,255,.18);
   box-shadow: 0 12px 40px rgba(0,0,0,.35);
@@ -67,24 +67,24 @@ body {
   border-radius: 50%;
   animation: voiceRing 2.2s infinite ease-out;
 }
-.ring-one { width: 118px; height: 118px; }
-.ring-two { width: 132px; height: 132px; animation-delay: .7s; }
+.ring-one { width: 198px; height: 198px; }
+.ring-two { width: 220px; height: 220px; animation-delay: .7s; }
 @keyframes voiceRing {
   0% { transform: scale(.88); opacity: .8; }
   70%,100% { transform: scale(1.08); opacity: 0; }
 }
 .call-header h1 {
-  margin: 4px 0 2px;
-  font-size: 28px;
+  margin: 8px 0 4px;
+  font-size: 34px;
 }
 .status {
-  margin: 5px 0 12px;
+  margin: 6px 0 18px;
   min-height: 20px;
   color: #cbd5e1;
 }
 .call-btn {
-  width: 84px;
-  height: 84px;
+  width: 96px;
+  height: 96px;
   border: 0;
   border-radius: 50%;
   cursor: pointer;
@@ -190,5 +190,22 @@ footer { display:flex; justify-content:center; gap:22px; padding:12px 0 4px; pos
 .jannu-avatar { margin: 20px auto 14px; }
 .jannu-avatar.active .voice-ring { animation-duration: 1s; }
 .compact-chat { margin-top: 2px; }
+.more-btn {
+  width:100%; border:1px solid #334155; border-radius:16px; padding:14px 16px;
+  background:rgba(17,24,39,.9); color:#cbd5e1; font-size:14px; cursor:pointer;
+  margin:10px 0 12px;
+}
+.more-btn:hover { background:#1e293b; }
+.details-panel { display:none; }
+.details-panel.open { display:block; }
+.details-panel > .panel, .details-panel > .activity-panel { margin-top:0; margin-bottom:12px; }
 .panel, .activity-panel { width: 100%; }
-@media (max-width: 650px) { .compact-chat { min-height: 82px; max-height: 130px; } }
+@media (max-width: 650px) {
+  .call-header { min-height: 70vh; }
+  .jannu-avatar { width:200px; height:200px; }
+  .avatar-face { width:160px; height:160px; font-size:86px; }
+  .ring-one { width:180px; height:180px; }
+  .ring-two { width:200px; height:200px; }
+  .call-header h1 { font-size:32px; }
+  .compact-chat { min-height: 70px; max-height: 110px; }
+}
