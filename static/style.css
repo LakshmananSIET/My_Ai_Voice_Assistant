@@ -91,3 +91,26 @@ footer {
   .chat-box { min-height: 48vh; }
   .dashboard { grid-template-columns: 1fr; }
 }
+
+.activity-panel { margin: 14px 0; padding: 16px; border: 1px solid #334155; border-radius: 16px; background: #111827; }
+.section-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.section-title h2 { margin:0; font-size:20px; }
+.section-title span, .panel h3 span { color:#94a3b8; font-size:13px; }
+.activity-list { max-height:260px; overflow-y:auto; }
+.activity-row { display:flex; justify-content:space-between; gap:12px; padding:11px 4px; border-bottom:1px solid #1e293b; }
+.activity-row > div { display:flex; gap:9px; align-items:flex-start; }
+.activity-row small, .task-item small, .reminder-item small { color:#64748b; white-space:nowrap; }
+.activity-dot { width:8px; height:8px; border-radius:50%; background:#64748b; margin-top:7px; flex:none; }
+.activity-row.user .activity-dot { background:#60a5fa; }
+.activity-row.task .activity-dot { background:#a78bfa; }
+.activity-row.reminder .activity-dot { background:#f59e0b; }
+.item-list { list-style:none; padding:0; }
+.item-list li { padding:10px 4px; border-bottom:1px solid #1e293b; }
+.task-item, .reminder-item { display:flex; justify-content:space-between; gap:10px; }
+.task-item.completed { opacity:.65; }
+.task-item.completed span { text-decoration:line-through; }
+.notes-panel { margin-bottom:14px; }
+@media (max-width:650px) {
+  .activity-row { align-items:flex-start; }
+  .activity-row small, .task-item small, .reminder-item small { font-size:11px; }
+}
