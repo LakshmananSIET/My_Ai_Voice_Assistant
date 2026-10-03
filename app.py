@@ -17,8 +17,8 @@ app = FastAPI(title="Jannu - My AI Voice Assistant")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-TEXT_MODEL = os.environ.get("GROQ_TEXT_MODEL", "llama-3.3-70b-versatile")
-VISION_MODEL = os.environ.get("GROQ_VISION_MODEL", "llama-3.2-11b-vision-preview")
+TEXT_MODEL = os.environ.get("GROQ_TEXT_MODEL", "openai/gpt-oss-120b")
+VISION_MODEL = os.environ.get("GROQ_VISION_MODEL", "openai/gpt-oss-120b")
 WHISPER_MODEL = os.environ.get("GROQ_WHISPER_MODEL", "whisper-large-v3-turbo")
 TTS_VOICE = os.environ.get("TTS_VOICE", "en-US-AvaNeural")
 
@@ -260,7 +260,8 @@ async def chat(request: ChatRequest):
 
     try:
         ai_text = generate_ai_text(client, user_text)
-    except Exception:
+    except Exception as exc:
+        print(f"/api/chat AI error: {type(exc).__name__}: {exc}", flush=True)
         ai_text = "Sorry sir, ippo response generate panna mudiyala."
 
     return {
@@ -294,7 +295,8 @@ async def process_voice(file: UploadFile = File(...)):
 
     try:
         ai_text = generate_ai_text(client, user_text)
-    except Exception:
+    except Exception as exc:
+        print(f"/api/voice AI error: {type(exc).__name__}: {exc}", flush=True)
         ai_text = "Sorry sir, ippo response generate panna mudiyala."
 
     return {
