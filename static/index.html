@@ -10,9 +10,22 @@
 </head>
 <body>
 <div class="app-container">
-<header>
-<h1>Jannu</h1>
-<p id="status" class="status">Mic start pannunga</p>
+<header class="call-header">
+  <div class="call-top">
+    <span class="call-back">Jannu</span>
+    <span class="online-dot"></span><span class="online-text">Online</span>
+  </div>
+  <div class="jannu-avatar" aria-label="Jannu">
+    <div class="avatar-face">👩🏻</div>
+    <div class="voice-ring ring-one"></div>
+    <div class="voice-ring ring-two"></div>
+  </div>
+  <h1>Jannu</h1>
+  <p id="status" class="status">Mic start pannunga</p>
+  <button id="micBtn" class="call-btn" aria-label="Start speaking">
+    <span class="call-icon">🎙️</span>
+  </button>
+  <div class="call-hint">Tap to speak with Jannu</div>
 </header>
 <main id="chatBox" class="chat-box">
 <div class="message ai">Hi Lakshman sir! Enna help venum?</div>
@@ -38,7 +51,6 @@
 <footer>
 <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
 <button id="cameraBtn" class="action-btn camera" aria-label="Camera">📷</button>
-<button id="micBtn" class="action-btn mic" aria-label="Microphone">🎙️</button>
 </footer>
 </div>
 <script src="/static/app.js"></script>
