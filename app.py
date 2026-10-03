@@ -237,11 +237,13 @@ User request: {request.text}
         due = due.astimezone(ZoneInfo("Asia/Kolkata"))
         if due <= now:
             return {"ok": False, "message": "Andha time past-la irukku sir. Future time sollunga."}
+        message = f"Seri sir, {due.strftime('%d %b %I:%M %p')} ku remind panren: {title}."
         return {
             "ok": True,
             "title": title,
             "due_at": due.isoformat(),
-            "message": f"Seri sir, {due.strftime('%d %b %I:%M %p')} ku remind panren: {title}.",
+            "message": message,
+            "audio_b64": await synthesize_speech(message),
         }
     except Exception as exc:
         return {"ok": False, "message": f"Reminder set panna mudiyala sir: {exc}"}
