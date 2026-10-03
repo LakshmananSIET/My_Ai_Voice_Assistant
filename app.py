@@ -1,6 +1,7 @@
 import os
 import json
 import base64
+import asyncio
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -26,7 +27,7 @@ TTS_VOICE = os.environ.get("TTS_VOICE", "en-US-AvaNeural")
 def get_client() -> Groq:
     if not GROQ_API_KEY:
         raise HTTPException(status_code=500, detail="GROQ_API_KEY environment variable missing.")
-    return Groq(api_key=GROQ_API_KEY)
+    return Groq(api_key=GROQ_API_KEY, timeout=20.0, max_retries=1)
 
 
 def search_web(query: str) -> str:
@@ -174,14 +175,18 @@ def generate_ai_text(client: Groq, user_text: str) -> str:
 
 
 async def synthesize_speech(text: str) -> str:
-    try:
+    async def _synthesize():
         communicate = edge_tts.Communicate(text, voice=TTS_VOICE)
         audio_bytes = b""
         async for chunk in communicate.stream():
             if chunk["type"] == "audio":
                 audio_bytes += chunk["data"]
         return base64.b64encode(audio_bytes).decode("utf-8")
-    except Exception:
+
+    try:
+        return await asyncio.wait_for(_synthesize(), timeout=15)
+    except Exception as exc:
+        print(f"TTS error: {type(exc).__name__}: {exc}", flush=True)
         return ""
 
 
@@ -251,6 +256,7 @@ User request: {request.text}
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
+    print(f"/api/chat received: {request.text!r}", flush=True)
     client = get_client()
     user_text = request.text.strip()
     if not user_text:
@@ -264,10 +270,12 @@ async def chat(request: ChatRequest):
         print(f"/api/chat AI error: {type(exc).__name__}: {exc}", flush=True)
         ai_text = "Sorry sir, ippo response generate panna mudiyala."
 
+    audio_b64 = await synthesize_speech(ai_text)
+    print(f"/api/chat reply ready: {ai_text[:120]!r}, audio={bool(audio_b64)}", flush=True)
     return {
         "transcription": user_text,
         "response_text": ai_text,
-        "audio_b64": await synthesize_speech(ai_text),
+        "audio_b64": audio_b64,
     }
 
 
