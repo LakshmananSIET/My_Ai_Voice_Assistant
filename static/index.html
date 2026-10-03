@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Jannu - My AI Voice Assistant</title>
+<link rel="manifest" href="/static/manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="app-container">
+<header>
+<h1>Jannu</h1>
+<p id="status" class="status">Mic start pannunga</p>
+</header>
+<main id="chatBox" class="chat-box">
+<div class="message ai">Hi Lakshman sir! Enna help venum?</div>
+</main>
+<section class="dashboard">
+<div class="panel"><h3>📋 Tasks (<span id="taskCount">0</span>)</h3><ul id="tasksList" class="item-list"><li class="empty">No tasks</li></ul></div>
+<div class="panel"><h3>📝 Notes</h3><ul id="notesList" class="item-list"><li class="empty">No notes</li></ul></div>
+</section>
+<footer>
+<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
+<button id="cameraBtn" class="action-btn camera" aria-label="Camera">📷</button>
+<button id="micBtn" class="action-btn mic" aria-label="Microphone">🎙️</button>
+</footer>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
