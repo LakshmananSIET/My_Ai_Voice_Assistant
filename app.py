@@ -2,6 +2,7 @@ import os
 import json
 import base64
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
@@ -105,7 +106,7 @@ TOOLS_SCHEMA = [
 
 
 def make_system_prompt() -> str:
-    current_time = datetime.now().strftime("%A, %B %d, %Y at %I:%M %p")
+    current_time = datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%A, %B %d, %Y at %I:%M %p IST")
     return f"""
 You are Jannu, a friendly personal voice assistant for Lakshmanan.
 Current time: {current_time}.
@@ -196,6 +197,54 @@ async def serve_index():
 @app.get("/health")
 async def health():
     return {"status": "ok", "assistant": "jannu"}
+
+
+class ReminderRequest(BaseModel):
+    text: str
+
+
+@app.post("/api/reminder")
+async def create_reminder(request: ReminderRequest):
+    client = get_client()
+    now = datetime.now(ZoneInfo("Asia/Kolkata"))
+    prompt = f"""
+You are a reminder parser. Current India time is {now.isoformat()}.
+Parse the user's reminder request and return ONLY valid JSON with:
+{{"title":"short reminder title","due_at":"ISO-8601 datetime with +05:30 offset"}}
+
+Rules:
+- Understand natural language such as "remind me at 6 PM to call Arun", "tomorrow 8 AM study Verilog", "in 20 minutes drink water".
+- If the user gives a time without a date, use today if that time is still in the future; otherwise use tomorrow.
+- If no usable future date/time can be determined, return {{"title":"","due_at":""}}.
+- Keep the title short and natural.
+User request: {request.text}
+""".strip()
+
+    try:
+        result = client.chat.completions.create(
+            model=TEXT_MODEL,
+            messages=[{"role": "system", "content": prompt}],
+            response_format={"type": "json_object"},
+        )
+        data = json.loads(result.choices[0].message.content or "{}")
+        due_at = data.get("due_at", "")
+        title = data.get("title", "").strip()
+        if not due_at or not title:
+            return {"ok": False, "message": "Reminder time puriyala sir. Example: 6 PM-ku call Arun remind pannu."}
+        due = datetime.fromisoformat(due_at)
+        if due.tzinfo is None:
+            due = due.replace(tzinfo=ZoneInfo("Asia/Kolkata"))
+        due = due.astimezone(ZoneInfo("Asia/Kolkata"))
+        if due <= now:
+            return {"ok": False, "message": "Andha time past-la irukku sir. Future time sollunga."}
+        return {
+            "ok": True,
+            "title": title,
+            "due_at": due.isoformat(),
+            "message": f"Seri sir, {due.strftime('%d %b %I:%M %p')} ku remind panren: {title}.",
+        }
+    except Exception as exc:
+        return {"ok": False, "message": f"Reminder set panna mudiyala sir: {exc}"}
 
 
 @app.post("/api/chat")
