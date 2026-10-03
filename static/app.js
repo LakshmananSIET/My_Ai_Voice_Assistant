@@ -11,6 +11,12 @@ const cameraBtn = document.getElementById("cameraBtn");
 const cameraInput = document.getElementById("cameraInput");
 const statusText = document.getElementById("status");
 const chatBox = document.getElementById("chatBox");
+const moreBtn = document.getElementById("moreBtn");
+const detailsPanel = document.getElementById("detailsPanel");
+if (moreBtn) moreBtn.addEventListener("click", () => {
+    const open = detailsPanel.classList.toggle("open");
+    moreBtn.innerText = open ? "⌃ Hide Activity, Reminders & Tasks" : "⌄ Show Activity, Reminders & Tasks";
+});
 
 let savedTasks = JSON.parse(localStorage.getItem("ai_tasks") || "[]");
 let savedNotes = JSON.parse(localStorage.getItem("ai_notes") || "[]");
