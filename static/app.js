@@ -277,7 +277,7 @@ function completeTaskFromSpeech(text) {
 }
 
 function makeId() {
-    if (window.crypto && crypto.randomUUID) return makeId();
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
     return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
