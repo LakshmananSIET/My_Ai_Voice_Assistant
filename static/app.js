@@ -14,6 +14,7 @@ const chatBox = document.getElementById("chatBox");
 
 let savedTasks = JSON.parse(localStorage.getItem("ai_tasks") || "[]");
 let savedNotes = JSON.parse(localStorage.getItem("ai_notes") || "[]");
+let savedActivity = JSON.parse(localStorage.getItem("jannu_activity") || "[]");
 
 renderDashboard();
 restoreReminders();
@@ -75,8 +76,29 @@ function initSpeechRecognition() {
         waitingForReply = true;
         statusText.innerText = "Jannu yosichitu irukken...";
         appendMessage(transcript, "user");
+        addActivity(transcript, "user");
 
         try {
+            if (isTaskRequest(transcript)) {
+                const task = createTaskFromSpeech(transcript);
+                if (task) {
+                    appendMessage("Seri sir, task noted: " + task.title, "ai");
+                    addActivity(task.title, "task", task.status);
+                    await speakAndResume(await makeSpeech("Seri sir, task noted: " + task.title));
+                    return;
+                }
+            }
+
+            if (isTaskCompletionRequest(transcript)) {
+                const completed = completeTaskFromSpeech(transcript);
+                if (completed) {
+                    appendMessage("Seri sir, task completed: " + completed.title, "ai");
+                    addActivity(completed.title, "task", "completed");
+                    await speakAndResume(await makeSpeech("Seri sir, task completed: " + completed.title));
+                    return;
+                }
+            }
+
             if (isReminderRequest(transcript)) {
                 const reminderResponse = await fetch("/api/reminder", {
                     method: "POST",
@@ -85,8 +107,10 @@ function initSpeechRecognition() {
                 });
                 const reminderData = await reminderResponse.json();
                 appendMessage(reminderData.message || "Reminder set panna mudiyala.", "ai");
+                addActivity(reminderData.message || transcript, "reminder");
                 if (reminderData.ok) {
                     saveAndScheduleReminder(reminderData.title, reminderData.due_at);
+                    addActivity(reminderData.title, "reminder", "pending");
                 }
                 await speakAndResume(reminderData.audio_b64 || "");
                 return;
@@ -99,6 +123,7 @@ function initSpeechRecognition() {
             });
             const data = await response.json();
             appendMessage(data.response_text || "Sorry sir, answer kedaikala.", "ai");
+            addActivity(data.response_text || "Jannu replied", "ai");
             await speakAndResume(data.audio_b64);
         } catch (_) {
             appendMessage("Network problem sir. Again try pannunga.", "ai");
@@ -197,6 +222,54 @@ async function speakAndResume(audioB64) {
 }
 
 
+function isTaskRequest(text) {
+    return /\b(add|create|make|set|note|remember)\b.*\btask\b|\btask\b.*\b(add|create|set|note)\b/i.test(text);
+}
+
+function isTaskCompletionRequest(text) {
+    return /\b(completed|complete|finished|done)\b.*\b(task|it)\b|\b(task|it)\b.*\b(completed|complete|finished|done)\b/i.test(text);
+}
+
+function createTaskFromSpeech(text) {
+    let title = text
+        .replace(/^.*?\btask\b\s*(to|:|-)?\s*/i, "")
+        .replace(/^\s*(add|create|set|note)\s+/i, "")
+        .trim();
+    if (!title || title.length < 2) title = text.replace(/\b(task|please|add|create|set)\b/gi, "").trim();
+    if (!title) return null;
+    const task = { id: crypto.randomUUID(), title, status: "pending", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    savedTasks.unshift(task);
+    localStorage.setItem("ai_tasks", JSON.stringify(savedTasks));
+    renderDashboard();
+    return task;
+}
+
+function completeTaskFromSpeech(text) {
+    const active = savedTasks.filter(t => t.status === "pending");
+    if (!active.length) return null;
+    const words = text.toLowerCase().replace(/\b(completed|complete|finished|done|task|it|is|the)\b/g, "").trim();
+    let task = active.find(t => words && t.title.toLowerCase().includes(words));
+    if (!task) task = active[0];
+    task.status = "completed";
+    task.updatedAt = new Date().toISOString();
+    localStorage.setItem("ai_tasks", JSON.stringify(savedTasks));
+    renderDashboard();
+    return task;
+}
+
+function addActivity(text, type = "message", status = "") {
+    savedActivity.unshift({
+        id: crypto.randomUUID(),
+        text: String(text),
+        type,
+        status,
+        time: new Date().toISOString()
+    });
+    savedActivity = savedActivity.slice(0, 50);
+    localStorage.setItem("jannu_activity", JSON.stringify(savedActivity));
+    renderDashboard();
+}
+
 function isReminderRequest(text) {
     return /\b(remind|reminder|remember|nyabagam|ninaivu)\b/i.test(text);
 }
@@ -270,31 +343,40 @@ function fireReminder(reminder) {
     }
 
     appendMessage(message, "ai");
+    addActivity(message, "reminder", "completed");
     renderDashboard();
 }
 
 
 function renderDashboard() {
     const pending = savedTasks.filter(t => t.status === "pending");
-    const reminderCount = savedReminders.filter(r => !r.done).length;
-    document.getElementById("taskCount").innerText = pending.length + reminderCount;
-    document.getElementById("tasksList").innerHTML = pending.length === 0
+    const reminders = savedReminders.filter(r => !r.done);
+
+    document.getElementById("taskCount").innerText = savedTasks.length;
+    document.getElementById("reminderCount").innerText = reminders.length;
+    document.getElementById("activityCount").innerText = savedActivity.length;
+
+    document.getElementById("tasksList").innerHTML = savedTasks.length === 0
         ? '<li class="empty">No tasks</li>'
-        : pending.map(t => '<li>⏳ ' + escapeHtml(t.title) + '</li>').join("");
+        : savedTasks.map(t => '<li class="task-item ' + t.status + '"><span>' +
+          (t.status === "completed" ? "☑️ " : "⬜ ") + escapeHtml(t.title) +
+          '</span><small>' + (t.status === "completed" ? "Completed" : "Not completed") + '</small></li>').join("");
+
+    document.getElementById("remindersList").innerHTML = reminders.length === 0
+        ? '<li class="empty">No reminders</li>'
+        : reminders.map(r => '<li class="reminder-item"><span>🔔 ' + escapeHtml(r.title) +
+          '</span><small>' + new Date(r.dueAt).toLocaleString("en-IN", {day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) +
+          '</small></li>').join("");
+
     document.getElementById("notesList").innerHTML = savedNotes.length === 0
         ? '<li class="empty">No notes</li>'
-        : savedNotes.slice(-5).reverse().map(n => '<li>📌 ' + escapeHtml(n) + '</li>').join("");
+        : savedNotes.slice().reverse().slice(0, 10).map(n => '<li>📌 ' + escapeHtml(n) + '</li>').join("");
+
+    document.getElementById("activityList").innerHTML = savedActivity.length === 0
+        ? '<div class="empty">No activity yet</div>'
+        : savedActivity.map(a => '<div class="activity-row ' + escapeHtml(a.type) + '"><div><span class="activity-dot"></span><span>' +
+          escapeHtml(a.text) + '</span></div><small>' +
+          new Date(a.time).toLocaleString("en-IN", {day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) +
+          '</small></div>').join("");
 }
 
-function escapeHtml(value) {
-    return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-}
-
-function appendMessage(text, sender) {
-    const msgDiv = document.createElement("div");
-    msgDiv.classList.add("message", sender);
-    msgDiv.innerText = text;
-    chatBox.appendChild(msgDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
