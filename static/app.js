@@ -200,7 +200,7 @@ async function speakAndResume(audioB64) {
 
 
 function isReminderRequest(text) {
-    return /\\b(remind|reminder|remember|nyabagam|ninaivu)\\b/i.test(text);
+    return /\b(remind|reminder|remember|nyabagam|ninaivu)\b/i.test(text);
 }
 
 async function makeSpeech(text) {
